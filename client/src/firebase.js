@@ -4,7 +4,8 @@ import {
     getAuth,
     createUserWithEmailAndPassword,
     updateProfile,
-    sendEmailVerification
+    sendEmailVerification,
+    signInWithEmailAndPassword
 } from "firebase/auth";
 
 // firebase configuration object
@@ -54,4 +55,4 @@ export const createAccount = async (email, password, nickname) => {
     }
 };
 
-export { auth, useAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile };
+export { auth, useAuth, createUserWithEmailAndPassword, sendEmailVerification, updateProfile, signInWithEmailAndPassword };
