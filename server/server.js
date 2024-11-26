@@ -1,8 +1,13 @@
 const fs = require("fs");
 const csvParser = require("csv-parser");
 const express = require("express");
-const path = require("path");
+const jwt = require('jsonwebtoken');
+
 const app = express();
+const openRouter = express.Router();
+const secureRouter = express.Router();
+
+const JWT_SECRET = "testingkey123"
 
 app.use(express.json({ limit: '10kb' })); // limit JSON payloads to 1 kilobyte
 app.use('/', express.static("../client"));
@@ -26,15 +31,34 @@ fs.createReadStream("data/europe-destinations.csv")
         //console.log(destinationsJSON);
     });
 
+
+// request logger
 app.use((req, res, next) => {
     console.log(`${req.method} request for ${req.url}`);
     next();
 });
 
-// ----- HTTP requests for both authorized and unauthorized users -----
+// middleware for verifying JWT for secure routes
+function verifyJWT(req, res, next) {
+    const token = req.headers.authorization?.split(" ")[1];
+
+    if (!token)
+        res.status(401).send("Access token is missing or invalid");
+
+    try {
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.user = decoded;
+        next();
+    } catch (err) {
+        res.status(403).send(`${err}`);
+    }
+}
+
+
+// ----- HTTP requests for both authorized and unauthorized users (open) -----
 
 // get all information from given destination ID
-app.get('/api/open/destinations/:id', (req,res) => {
+openRouter.get('/:id', (req, res) => {
     const destination = destinationsJSON[req.params.id - 1];
     const destinationInfo = {
         Destination: destination["Destination"],
@@ -59,7 +83,7 @@ app.get('/api/open/destinations/:id', (req,res) => {
 });
 
 // get geographical coordinates of a given destination ID
-app.get('/api/open/destinations/geocoordinates/:id', (req, res) => {
+openRouter.get('geocoordinates/:id', (req, res) => {
     const destination = destinationsJSON[req.params.id - 1];
     const coordinates = {
         Latitude: destination["Latitude"],
@@ -70,7 +94,7 @@ app.get('/api/open/destinations/geocoordinates/:id', (req, res) => {
 });
 
 // get all available country names
-app.get('/api/open/destinations/countries', (req, res) => {
+openRouter.get('/countries', (req, res) => {
     const countryNames = [];
     for (let i = 0; i < destinationsJSON.length; i++) {
         const countryName = destinationsJSON[i]["Country"];
@@ -84,7 +108,7 @@ app.get('/api/open/destinations/countries', (req, res) => {
 // match(field, pattern, n)
 /* Find first n number of matching IDs for pattern matching a given field.
     If n is not given or the number of matches is less than n, return all matches */
-app.get('/api/open/destinations/search/:field/:pattern/:n?', (req, res) => {
+openRouter.get('/search/:field/:pattern/:n?', (req, res) => {
     const { field, pattern, n } = req.params; // get local variables for each parameter
     const resultLimit = n ? parseInt(n, 10) : undefined; // convert 'n' to integer if provided
 
@@ -110,11 +134,13 @@ app.get('/api/open/destinations/search/:field/:pattern/:n?', (req, res) => {
 
 // ----- HTTP requests for only authorized users -----
 
+secureRouter.use(verifyJWT);
+
 // create new list with given name, return error if name exists
-app.post('/api/secure/lists/newlist/:listname', (req, res) => {
+secureRouter.post('/newlist/:listname', (req, res) => {
     const listname = req.params.listname; // get the name of the (probably) new list from the parameters
     const listsPath = "data/lists.json"
-    
+
     // read the lists.json file
     fs.readFile(listsPath, "utf8", (err, data) => {
         let lists; // create an object for storing the lists
@@ -152,7 +178,7 @@ app.post('/api/secure/lists/newlist/:listname', (req, res) => {
 });
 
 // save list of IDs to a given list name, return error if name does not exist
-app.put('/api/secure/lists/updatelist/:listname', (req, res) => {
+secureRouter.put('/updatelist/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
     const { destinationIDs } = req.body; // get the destination IDs from the request body
@@ -186,7 +212,7 @@ app.put('/api/secure/lists/updatelist/:listname', (req, res) => {
 });
 
 // get the list of destination IDs for a given list name
-app.get('/api/secure/lists/getIDs/:listname', (req, res) => {
+secureRouter.get('/getIDs/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -210,7 +236,7 @@ app.get('/api/secure/lists/getIDs/:listname', (req, res) => {
 });
 
 // delete a list of desination IDs for a given list name
-app.delete('/api/secure/lists/delete/:listname', (req, res) => {
+secureRouter.delete('/delete/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -231,8 +257,8 @@ app.delete('/api/secure/lists/delete/:listname', (req, res) => {
         // delete the list
         delete lists[listname];
 
-         // write the updated lists back to the file
-         fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
+        // write the updated lists back to the file
+        fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
             if (err) // error writing to lists.json
                 return res.status(500).send(`Error writing to lists.json: ${err.message}`);
 
@@ -243,7 +269,7 @@ app.delete('/api/secure/lists/delete/:listname', (req, res) => {
 });
 
 // get a list of destination names, countries, coordinates, currency, and language of all destinations from list
-app.get('/api/lists/getinfo/:listname', (req, res) => {
+secureRouter.get('/getinfo/:listname', (req, res) => {
     const listname = req.params.listname;
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -265,18 +291,21 @@ app.get('/api/lists/getinfo/:listname', (req, res) => {
 
         // store info of destination
         const destinationInfo = destinationIDs.map(id => {
-            const destination = destinationsJSON[id-1];
+            const destination = destinationsJSON[id - 1];
             return {
-                    Destination: destination["Destination"],
-                    Region: destination["Region"],
-                    Country: destination["Country"],
-                    Latitude: destination["Latitude"],
-                    Longitude: destination["Longitude"],
-                    Currency: destination["Currency"],
-                    Language: destination["Language"]
+                Destination: destination["Destination"],
+                Region: destination["Region"],
+                Country: destination["Country"],
+                Latitude: destination["Latitude"],
+                Longitude: destination["Longitude"],
+                Currency: destination["Currency"],
+                Language: destination["Language"]
             }; // return the object with appropriate info
         }); // end of map
 
         res.json(destinationInfo);
     }); // end of readfile
 });
+
+app.use('/api/open/destinations', openRouter);
+app.use('api/secure/', secureRouter);
