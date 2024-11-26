@@ -31,8 +31,10 @@ app.use((req, res, next) => {
     next();
 });
 
-// item 1, get all information of a given destination ID
-app.get('/api/destinations/:id', (req, res) => {
+// ----- HTTP requests for both authorized and unauthorized users -----
+
+// get all information from given destination ID
+app.get('/api/open/destinations/:id', (req,res) => {
     const destination = destinationsJSON[req.params.id - 1];
     const destinationInfo = {
         Destination: destination["Destination"],
@@ -56,8 +58,8 @@ app.get('/api/destinations/:id', (req, res) => {
     res.json(destinationInfo);
 });
 
-// item 2, get geographical coordinates of a given destination ID
-app.get('/api/destinations/geocoordinates/:id', (req, res) => {
+// get geographical coordinates of a given destination ID
+app.get('/api/open/destinations/geocoordinates/:id', (req, res) => {
     const destination = destinationsJSON[req.params.id - 1];
     const coordinates = {
         Latitude: destination["Latitude"],
@@ -67,8 +69,8 @@ app.get('/api/destinations/geocoordinates/:id', (req, res) => {
     res.json(coordinates);
 });
 
-// item 3, get all available country names
-app.get('/api/countries', (req, res) => {
+// get all available country names
+app.get('/api/open/destinations/countries', (req, res) => {
     const countryNames = [];
     for (let i = 0; i < destinationsJSON.length; i++) {
         const countryName = destinationsJSON[i]["Country"];
@@ -79,10 +81,10 @@ app.get('/api/countries', (req, res) => {
     res.json(countryNames);
 });
 
-// item 4, match(field, pattern, n)
+// match(field, pattern, n)
 /* Find first n number of matching IDs for pattern matching a given field.
     If n is not given or the number of matches is less than n, return all matches */
-app.get('/api/search/:field/:pattern/:n?', (req, res) => {
+app.get('/api/open/destinations/search/:field/:pattern/:n?', (req, res) => {
     const { field, pattern, n } = req.params; // get local variables for each parameter
     const resultLimit = n ? parseInt(n, 10) : undefined; // convert 'n' to integer if provided
 
@@ -106,8 +108,10 @@ app.get('/api/search/:field/:pattern/:n?', (req, res) => {
     } catch (error) { res.status(500).send(`Error processing request: ${error.message}`); }
 });
 
-// item 5, create new list with given name, return error if name exists
-app.post('/api/lists/newlist/:listname', (req, res) => {
+// ----- HTTP requests for only authorized users -----
+
+// create new list with given name, return error if name exists
+app.post('/api/secure/lists/newlist/:listname', (req, res) => {
     const listname = req.params.listname; // get the name of the (probably) new list from the parameters
     const listsPath = "data/lists.json"
     
@@ -147,8 +151,8 @@ app.post('/api/lists/newlist/:listname', (req, res) => {
     }); // end of readfile
 });
 
-// item 6, save list of IDs to a given list name, return error if name does not exist
-app.put('/api/lists/updatelist/:listname/destinationIDs', (req, res) => {
+// save list of IDs to a given list name, return error if name does not exist
+app.put('/api/secure/lists/updatelist/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
     const { destinationIDs } = req.body; // get the destination IDs from the request body
@@ -181,8 +185,8 @@ app.put('/api/lists/updatelist/:listname/destinationIDs', (req, res) => {
     }); // end of readfile
 });
 
-// item 7, get the list of destination IDs for a given list name
-app.get('/api/lists/getIDs/:listname', (req, res) => {
+// get the list of destination IDs for a given list name
+app.get('/api/secure/lists/getIDs/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -205,8 +209,8 @@ app.get('/api/lists/getIDs/:listname', (req, res) => {
     }); // end of readfile
 });
 
-// item 8, delete a list of desination IDs for a given list name
-app.delete('/api/lists/delete/:listname', (req, res) => {
+// delete a list of desination IDs for a given list name
+app.delete('/api/secure/lists/delete/:listname', (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -238,7 +242,7 @@ app.delete('/api/lists/delete/:listname', (req, res) => {
     }); // end of readfile
 });
 
-// item 9, get a list of destination names, countries, coordinates, currency, and language of all destinations from list
+// get a list of destination names, countries, coordinates, currency, and language of all destinations from list
 app.get('/api/lists/getinfo/:listname', (req, res) => {
     const listname = req.params.listname;
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
