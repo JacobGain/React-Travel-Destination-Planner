@@ -10,11 +10,18 @@ const CreateEmailAccount = () => {
 
   const handleSubmit = async (e) => {
 
+    e.preventDefault();
+
     if (!email || !password || !nickname) { // ensure all fields are filled in
       setError("All fields are required.");
       return;
     }
-    e.preventDefault();
+
+    if (!checkValidEmail(email)) {
+      setError("Invalid email format.")
+      return;
+    }
+
     setLoading(true); // start loading when the form is submitted
 
     try {
@@ -35,8 +42,20 @@ const CreateEmailAccount = () => {
       alert("Account created! Please check your email to verify your account.");
     } catch (err) {
       setLoading(false); // stop loading
-      setError(err.message); // set error message to display
+      // check the possible error codes and set the error message to display
+      if (err.code === "auth/email-already-in-use") {
+        setError("This email is already registered.");
+      } else if (err.code === "auth/user-disabled") {
+        setError("This account is disabled. Please contact site administrator.");
+      } else {
+        setError(err.message);
+      }
     }
+  };
+
+  const checkValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; // email reg expression
+    return emailRegex.test(email);
   };
 
   return (
