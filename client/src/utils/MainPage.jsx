@@ -27,7 +27,7 @@ const MainPage = () => {
     const handleAddDestinations = () =>
         addDestinationsToList(destinationNames, listName, resultsContainerRef.current);
     const handleSortList = (event) =>
-        sortDisplayedList(event.target, listName, resultsContainerRef.current);
+        sortDisplayedList(event.target.value, listName, resultsContainerRef.current);
 
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>

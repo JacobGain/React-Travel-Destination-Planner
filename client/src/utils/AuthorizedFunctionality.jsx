@@ -147,9 +147,11 @@ export function displayDestination(destination, resultsContainer) {
 // function used to create a list of favourite destinations
 export async function createList(listnameParam, resultsContainer) {
     const listname = listnameParam;
-    const response = await fetch(`/api/secure/lists/newlist/${listname}`, { method: "POST", headers: {
-        'Authorization': `Bearer ${getJWTToken()}`
-    } });
+    const response = await fetch(`/api/secure/lists/newlist/${listname}`, {
+        method: "POST", headers: {
+            'Authorization': `Bearer ${getJWTToken()}`
+        }
+    });
 
     // clear any existing content in the results container
     while (resultsContainer.firstChild)
@@ -173,7 +175,11 @@ export async function retrieveList(listnameParam, resultsContainer) {
     while (resultsContainer.firstChild)
         resultsContainer.removeChild(resultsContainer.firstChild);
 
-    const response = await fetch(`/api/secure/lists/getIDs/${listname}`);
+    const response = await fetch(`/api/secure/lists/getIDs/${listname}`, {
+        method: "GET", headers: {
+            'Authorization': `Bearer ${getJWTToken()}`
+        }
+    });
 
     // Handle server response
     if (!response.ok) {
@@ -210,7 +216,11 @@ export async function deleteList(listNameParam, resultsContainer) {
 
 
     // send DELETE request to the server
-    const response = await fetch(`/api/secure/lists/delete/${listname}`, { method: "DELETE" });
+    const response = await fetch(`/api/secure/lists/delete/${listname}`, {
+        method: "DELETE", headers: {
+            'Authorization': `Bearer ${getJWTToken()}`
+        }
+    });
 
     // handle server response
     if (response.ok) {
@@ -249,7 +259,7 @@ export async function addDestinationsToList(inputParam, listnameParam, resultsCo
     for (const name of sanitizedNames) {
         try {
             // make a fetch call to the server to search for the destination by name
-            const response = await fetch(`/api/open/search/Destination/${encodeURIComponent(name)}/1`);
+            const response = await fetch(`/api/open/destinations/search/Destination/${encodeURIComponent(name)}/1`);
             if (!response.ok) {
                 throw new Error(`Error fetching destination for "${name}": ${response.statusText}`);
             } // end of first if
@@ -268,11 +278,12 @@ export async function addDestinationsToList(inputParam, listnameParam, resultsCo
     // update the list with the gathered destination IDs
     try {
         const updateResponse = await fetch(`/api/secure/lists/updatelist/${listname}`, {
-            method: 'PUT',
+            method: "PUT", 
             headers: {
-                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getJWTToken()}`,
+                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ destinationIDs }),
+            body: JSON.stringify({ destinationIDs })
         }); // end of fetch
 
         if (!updateResponse.ok)
@@ -292,7 +303,11 @@ export async function sortDisplayedList(sortFieldParam, listNameParam, resultsCo
     const listName = listNameParam; // get list name
 
     // retrieve the list data
-    const response = await fetch(`/api/secure/lists/getIDs/${listName}`);
+    const response = await fetch(`/api/secure/lists/getIDs/${listName}`, {
+        method: "GET", headers: {
+            'Authorization': `Bearer ${getJWTToken()}`
+        }
+    });
 
     if (!response.ok) {
         const errorMessage = await response.text();
