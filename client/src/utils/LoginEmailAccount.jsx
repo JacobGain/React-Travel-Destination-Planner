@@ -19,11 +19,24 @@ const LoginEmailAccount = () => {
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
 
+            fetch('/api/open/JWTlogin', {
+                method: 'POST',
+                body: JSON.stringify({ email: 'user.email', isEmailVerified: userCredential.user.emailVerified }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // on successful login, save token to localStorage
+                    localStorage.setItem('authToken', data.token);
+                })
+                .catch(error => console.error('Login failed:', error));
+
             setLoading(false);
             setError("");
 
             // navigate to the main page with user authenticated state
             navigate("/main", { state: { isGuest: false, user: user.email } });
+
         } catch (err) {
             setLoading(false);
 

@@ -7,13 +7,12 @@ const app = express();
 const openRouter = express.Router();
 const secureRouter = express.Router();
 
-const JWT_SECRET = "testingkey123"
 
 app.use(express.json({ limit: '10kb' })); // limit JSON payloads to 1 kilobyte
 app.use('/', express.static("../client"));
 
 // PORT environment variable, part of enviro where process runs
-const port = 3000
+const port = 5000
 app.listen(port, () => console.log(`Listening on port ${port}...`))
 
 const destinationsJSON = []; // stores the csv data in JSON format
@@ -37,23 +36,6 @@ app.use((req, res, next) => {
     console.log(`${req.method} request for ${req.url}`);
     next();
 });
-
-// middleware for verifying JWT for secure routes
-function verifyJWT(req, res, next) {
-    const token = req.headers.authorization?.split(" ")[1];
-
-    if (!token)
-        res.status(401).send("Access token is missing or invalid");
-
-    try {
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.user = decoded;
-        next();
-    } catch (err) {
-        res.status(403).send(`${err}`);
-    }
-}
-
 
 // ----- HTTP requests for both authorized and unauthorized users (open) -----
 
@@ -132,12 +114,42 @@ openRouter.get('/search/:field/:pattern/:n?', (req, res) => {
     } catch (error) { res.status(500).send(`Error processing request: ${error.message}`); }
 });
 
+const JWT_SECRET = 'testingkey123';
+
+// POST request for creating the JWT in the backend
+openRouter.post('/JWTlogin', (req, res) => {
+    const { email, isEmailVerified } = req.body;
+
+    if (isEmailVerified) {
+        // create a JWT token
+        const token = jwt.sign({ username: email }, JWT_SECRET, { expiresIn: '2h' });
+
+        // send the token to the frontend
+        res.json({ token });
+    } else {
+        res.status(401).json({ message: 'Invalid credentials' });
+    }
+});
+
+// token validation middleware
+const authenticateToken = (req, res, next) => {
+    const token = req.headers['Authorization'] && req.headers['Authorization'].split(' ')[1];
+
+    if (!token) return res.status(401).json({ message: 'Access denied' });
+
+    jwt.verify(token, JWT_SECRET, (err, decoded) => {
+        if (err) return res.status(403).json({ message: 'Invalid token' });
+
+        // attach the decoded user data to the request
+        req.user = decoded;
+        next(); // proceed to the next middleware or route handler
+    });
+};
+
 // ----- HTTP requests for only authorized users -----
 
-secureRouter.use(verifyJWT);
-
 // create new list with given name, return error if name exists
-secureRouter.post('/newlist/:listname', (req, res) => {
+secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the name of the (probably) new list from the parameters
     const listsPath = "data/lists.json"
 
@@ -308,4 +320,4 @@ secureRouter.get('/getinfo/:listname', (req, res) => {
 });
 
 app.use('/api/open/destinations', openRouter);
-app.use('api/secure/', secureRouter);
+app.use('/api/secure/lists', secureRouter);
