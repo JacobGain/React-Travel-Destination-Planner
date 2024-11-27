@@ -18,18 +18,25 @@ const LoginEmailAccount = () => {
             // log in the user with Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
+            console.log(user.email);
+            console.log(user.emailVerified);
 
-            fetch('/api/open/JWTlogin', {
+            const response = await fetch('/api/open/JWTlogin', {
                 method: 'POST',
-                body: JSON.stringify({ email: 'user.email', isEmailVerified: userCredential.user.emailVerified }),
-                headers: { 'Content-Type': 'application/json' }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // on successful login, save token to localStorage
-                    localStorage.setItem('authToken', data.token);
-                })
-                .catch(error => console.error('Login failed:', error));
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: user.email, isEmailVerified: user.emailVerified })
+            });
+
+            // Handle server response
+            if (!response.ok) {
+                const errorMessage = await response.text();
+                alert(`Error: ${errorMessage}`); // Show error message if list doesn't exist or if there's a server error
+                return;
+            } // end of if
+
+            const data = await response.json();
+            localStorage.setItem('authToken', data.token);
+            // console.log(data.token);
 
             setLoading(false);
             setError("");

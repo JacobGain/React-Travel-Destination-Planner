@@ -15,6 +15,9 @@ app.use('/', express.static("../client"));
 const port = 5000
 app.listen(port, () => console.log(`Listening on port ${port}...`))
 
+const cors = require('cors');
+app.use(cors({ origin: 'http://localhost:3000' }));
+
 const destinationsJSON = []; // stores the csv data in JSON format
 fs.createReadStream("data/europe-destinations.csv")
     .pipe(csvParser())
@@ -117,32 +120,31 @@ openRouter.get('/search/:field/:pattern/:n?', (req, res) => {
 const JWT_SECRET = 'testingkey123';
 
 // POST request for creating the JWT in the backend
-openRouter.post('/JWTlogin', (req, res) => {
+app.post('/api/open/JWTlogin', (req, res) => {
     const { email, isEmailVerified } = req.body;
 
     if (isEmailVerified) {
-        // create a JWT token
-        const token = jwt.sign({ username: email }, JWT_SECRET, { expiresIn: '2h' });
+        // Create a JWT token
+        const token = jwt.sign({ username: email }, JWT_SECRET, { expiresIn: '1h' });
 
-        // send the token to the frontend
+        // Send the token to the frontend
         res.json({ token });
     } else {
         res.status(401).json({ message: 'Invalid credentials' });
     }
 });
 
-// token validation middleware
+// JWT token validation
 const authenticateToken = (req, res, next) => {
-    const token = req.headers['Authorization'] && req.headers['Authorization'].split(' ')[1];
+    const authHeader = req.headers.authorization;
+    const token = authHeader && authHeader.split(' ')[1]; // Extract the token
 
-    if (!token) return res.status(401).json({ message: 'Access denied' });
+    if (!token) return res.status(401).send('Access denied. No token provided.');
 
-    jwt.verify(token, JWT_SECRET, (err, decoded) => {
-        if (err) return res.status(403).json({ message: 'Invalid token' });
-
-        // attach the decoded user data to the request
-        req.user = decoded;
-        next(); // proceed to the next middleware or route handler
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) return res.status(403).send('Invalid token.');
+        req.user = user; // Attach decoded payload to the request
+        next();
     });
 };
 
