@@ -187,16 +187,19 @@ export async function createList(listnameParam, descriptionParam, visibilityPara
 
 };
 
-// function used to retrieve the destinations from a favourites lise
+// function used to retrieve the destinations from a favourites list
 export async function retrieveList(listnameParam, resultsContainer) {
     const listname = listnameParam;
 
-    // clear any existing content in the results container
-    while (resultsContainer.firstChild)
+    // Clear any existing content in the results container
+    while (resultsContainer.firstChild) {
         resultsContainer.removeChild(resultsContainer.firstChild);
+    }
 
+    // Fetch the list from the server based on the listname
     const response = await fetch(`/api/secure/lists/getIDs/${listname}`, {
-        method: "GET", headers: {
+        method: "GET", 
+        headers: {
             'Authorization': `Bearer ${getJWTToken()}`
         }
     });
@@ -208,21 +211,21 @@ export async function retrieveList(listnameParam, resultsContainer) {
         return;
     } // end of if
 
-    // Parse the array of destination IDs
-    const destinationIDs = await response.json();
+    // Parse the list object containing the listIDs
+    const listIDs = await response.json();
+    const list = listIDs.ids;
 
-    // Fetch and display each destination by ID
-    for (const id of destinationIDs) {
-        const destinationResponse = await fetch(`/api/open/destinations/${id + 1}`);
-
+    // Fetch and display each destination by ID from the list
+    for (let i = 0; i < list.length; i++) {
+        const destinationResponse = await fetch(`/api/open/destinations/${list[i] + 1}`);
         if (destinationResponse.ok) {
             const destination = await destinationResponse.json();
+            console.log(destination);
             displayDestination(destination, resultsContainer); // Display each destination
         } else {
-            console.error(`Failed to fetch destination with ID ${id + 1}`);
+            console.error(`Failed to fetch destination with ID ${list[i] + 1}`);
         } // end of if/else
     } // end of for
-
 }; // end of retrieveList function
 
 // function used to delete a favourites list

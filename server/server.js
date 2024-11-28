@@ -254,14 +254,19 @@ secureRouter.get('/getIDs/:listname', authenticateToken, (req, res) => {
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
 
         // parse the data in the file if read successfully
-        lists = data.trim() ? JSON.parse(data) : {};
-
+        lists = data.trim() ? JSON.parse(data) : [];
+        let listindex = -1;
+        for(let i = 0; i < lists.length; i++) {
+            if(lists[i].listName === listname)
+                listindex = i;
+        }
         // check if the list exists
-        if (!lists[listname])
+        if (listindex === -1)
             return res.status(404).send(`List "${listname}" does not exist`);
 
-        const destinationIDs = lists[listname];
-        res.json(destinationIDs);
+        const ids = lists[listindex].listIDs;
+        console.log(ids);
+        res.json({ ids });
     }); // end of readfile
 });
 
@@ -278,14 +283,18 @@ secureRouter.delete('/delete/:listname', authenticateToken, (req, res) => {
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
 
         // parse the data in the file if read successfully
-        lists = data.trim() ? JSON.parse(data) : {};
-
+        lists = data.trim() ? JSON.parse(data) : [];
+        let listindex = -1;
+        for(let i = 0; i < lists.length; i++) {
+            if(lists[i].listName === listname)
+                listindex = i;
+        }
         // check if the list exists
-        if (!lists[listname])
+        if (listindex === -1)
             return res.status(404).send(`List "${listname}" does not exist`);
 
         // delete the list
-        delete lists[listname];
+        lists.splice(listindex, 1)
 
         // write the updated lists back to the file
         fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
@@ -310,14 +319,18 @@ secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
 
         // parse the data in the file if read successfully
-        lists = data.trim() ? JSON.parse(data) : {};
-
+        lists = data.trim() ? JSON.parse(data) : [];
+        let listindex = -1;
+        for(let i = 0; i < lists.length; i++) {
+            if(lists[i].listName === listname)
+                listindex = i;
+        }
         // check if the list exists
-        if (!lists[listname])
+        if (listindex === -1)
             return res.status(404).send(`List "${listname}" does not exist`);
 
         // store the destination IDs of given list in an object
-        const destinationIDs = lists[listname];
+        const destinationIDs = lists[listindex].listIDs;
 
         // store info of destination
         const destinationInfo = destinationIDs.map(id => {
