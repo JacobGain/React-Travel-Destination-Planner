@@ -14,12 +14,14 @@ const MainPage = () => {
     const user = location.state?.user || null;
 
     const [listName, setListName] = useState("");
+    const [listDescription, setListDescription] = useState("");
+    const [visibility, setListVisibility] = useState("private");
     const [destinationNames, setDestinationNames] = useState("");
     const resultsContainerRef = useRef(null); // Reference for results container
 
     // Wrapping imported functions to pass arguments
     const handleCreateList = () =>
-        createList(listName, resultsContainerRef.current);
+        createList(listName, listDescription, visibility, resultsContainerRef.current);
     const handleRetrieveList = () =>
         retrieveList(listName, resultsContainerRef.current);
     const handleDeleteList = () =>
@@ -41,12 +43,27 @@ const MainPage = () => {
                     </p>
                     <div id="list-section">
                         <h2>Manage Favourite Lists</h2>
+                        <select
+                            name="visbility"
+                            value={visibility}
+                            onChange={(e) => setListVisibility(e.target.value)}
+                        >
+                            <option value="private">Private</option>
+                            <option value="public">Public</option>
+                        </select>
                         <input
                             type="text"
                             id="list-name"
                             placeholder="Enter list name"
                             value={listName}
                             onChange={(e) => setListName(e.target.value)}
+                        />
+                        <input
+                            type="text"
+                            id=""
+                            placeholder="Enter list description"
+                            value={listDescription}
+                            onChange={(e) => setListDescription(e.target.value)}
                         />
                         <button onClick={handleCreateList}>Create List</button>
                         <button onClick={handleRetrieveList}>Retrieve List</button>

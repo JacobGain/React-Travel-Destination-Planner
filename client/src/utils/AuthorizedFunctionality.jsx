@@ -7,6 +7,17 @@ function getJWTToken() {
     return localStorage.getItem("authToken");  // Adjust as needed depending on where you store the token
 }
 
+function getCurrentDayAndTime() {
+    const now = new Date();
+
+    // Get day, time (hours and minutes only)
+    const day = now.toLocaleDateString(); // Example: "11/27/2024"
+    const hours = String(now.getHours()).padStart(2, '0'); // Add leading zero
+    const minutes = String(now.getMinutes()).padStart(2, '0'); // Add leading zero
+
+    return `${day} ${hours}:${minutes}`; // Example: "11/27/2024 14:05"
+};
+
 // function used to display the destinations from list retrieval
 export function displayDestination(destination, resultsContainer) {
 
@@ -145,12 +156,21 @@ export function displayDestination(destination, resultsContainer) {
 }; // end of displayDestination function
 
 // function used to create a list of favourite destinations
-export async function createList(listnameParam, resultsContainer) {
+export async function createList(listnameParam, descriptionParam, visibilityParam, resultsContainer) {
+
+    // add fields to get each of the other fields for desc, visibility (default private), last date 
+
+    const dateParam = getCurrentDayAndTime();
+    console.log(dateParam);
+
     const listname = listnameParam;
     const response = await fetch(`/api/secure/lists/newlist/${listname}`, {
-        method: "POST", headers: {
-            'Authorization': `Bearer ${getJWTToken()}`
-        }
+        method: "POST", 
+        headers: {
+            'Authorization': `Bearer ${getJWTToken()}`,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ listDescription: descriptionParam, listVisibility: visibilityParam, lastEditedDateTime: dateParam })
     });
 
     // clear any existing content in the results container
@@ -214,12 +234,12 @@ export async function deleteList(listNameParam, resultsContainer) {
     while (resultsContainer.firstChild)
         resultsContainer.removeChild(resultsContainer.firstChild);
 
-
     // send DELETE request to the server
     const response = await fetch(`/api/secure/lists/delete/${listname}`, {
-        method: "DELETE", headers: {
+        method: "DELETE", 
+        headers: {
             'Authorization': `Bearer ${getJWTToken()}`
-        }
+        },
     });
 
     // handle server response
@@ -275,6 +295,9 @@ export async function addDestinationsToList(inputParam, listnameParam, resultsCo
         } // end of try/catch
     } // end of for
 
+    const dateParam = getCurrentDayAndTime();
+    console.log(dateParam);
+
     // update the list with the gathered destination IDs
     try {
         const updateResponse = await fetch(`/api/secure/lists/updatelist/${listname}`, {
@@ -283,14 +306,15 @@ export async function addDestinationsToList(inputParam, listnameParam, resultsCo
                 'Authorization': `Bearer ${getJWTToken()}`,
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ destinationIDs })
+            body: JSON.stringify({ destinationIDs: destinationIDs, lastEditedDateTime: dateParam })
         }); // end of fetch
 
         if (!updateResponse.ok)
             throw new Error(`Error updating list: ${updateResponse.statusText}`);
 
-        const result = await updateResponse.text();
-        console.log(result); // success message
+        const message = await updateResponse.text();
+        alert(message); // show success message from server
+        console.log(message); // success message
     } catch (error) {
         console.error('Error updating the list:', error);
     } // end of try/catch

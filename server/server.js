@@ -11,12 +11,12 @@ const secureRouter = express.Router();
 app.use(express.json({ limit: '10kb' })); // limit JSON payloads to 1 kilobyte
 app.use('/', express.static("../client"));
 
-// PORT environment variable, part of enviro where process runs
-const port = 5000
-app.listen(port, () => console.log(`Listening on port ${port}...`))
-
 const cors = require('cors');
 app.use(cors({ origin: 'http://localhost:3000' }));
+
+// PORT environment variable, part of enviro where process runs
+const port = process.env.PORT || 5000
+app.listen(port, () => console.log(`Listening on port ${port}...`))
 
 const destinationsJSON = []; // stores the csv data in JSON format
 fs.createReadStream("data/europe-destinations.csv")
@@ -154,6 +154,7 @@ const authenticateToken = (req, res, next) => {
 secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the name of the (probably) new list from the parameters
     const listsPath = "data/lists.json"
+    const { listDescription, listVisibility, lastEditedDateTime } = req.body;
 
     // read the lists.json file
     fs.readFile(listsPath, "utf8", (err, data) => {
@@ -162,23 +163,32 @@ secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
         if (err) {
             if (err.code === 'ENOENT') {
                 // if the file does not exist, initialize with an empty object
-                lists = {};
+                lists = [];
             } else {
                 // handle any other reading errors
                 return res.status(500).send(`Error reading lists.json: ${err.message}`);
             }
         } else {
+            console.log("Raw data from file:", data); // Log the raw data
             // parse the existing data if the file was read successfully
-            lists = data.trim() ? JSON.parse(data) : {};
+            lists = data.trim() ? JSON.parse(data) : [];
         }
 
         // check if the list name already exists
-        if (lists[listname])
+        if (lists.some(list => list.listName === listname))
             return res.status(400).send(`List "${listname}" already exists.`);
 
 
         // add the new list with an empty array of destination IDs
-        lists[listname] = [];
+        const newList = {
+            listName: listname,
+            listDescription: listDescription,
+            listVisibility: listVisibility,
+            listIDs: [],
+            dateEdited: lastEditedDateTime
+        }
+
+        lists.push(newList);
 
         // write the updated lists back to the file
         fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
@@ -192,10 +202,10 @@ secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
 });
 
 // save list of IDs to a given list name, return error if name does not exist
-secureRouter.put('/updatelist/:listname', (req, res) => {
+secureRouter.put('/updatelist/:listname',authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
-    const { destinationIDs } = req.body; // get the destination IDs from the request body
+    const { destinationIDs, lastEditedDateTime } = req.body; // get the destination IDs from the request body
 
     // read the lists.json file
     fs.readFile(listsPath, "utf-8", (err, data) => {
@@ -206,13 +216,19 @@ secureRouter.put('/updatelist/:listname', (req, res) => {
 
         // parse the data in the file if read successfully
         lists = data.trim() ? JSON.parse(data) : {};
-
+        let listindex = -1;
+        for(let i = 0; i < lists.length; i++) {
+            if(lists[i].listName === listname)
+                listindex = i;
+        }
         // check if the list exists
-        if (!lists[listname])
+        if (listindex === -1)
             return res.status(404).send(`List "${listname}" does not exist`);
 
         // replace existing destination IDs with new values
-        lists[listname] = destinationIDs
+        lists[listindex].listIDs = destinationIDs
+        lists[listindex].dateEdited = lastEditedDateTime
+        console.log(lists);
 
         // write the updated lists back to the file
         fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
@@ -226,7 +242,7 @@ secureRouter.put('/updatelist/:listname', (req, res) => {
 });
 
 // get the list of destination IDs for a given list name
-secureRouter.get('/getIDs/:listname', (req, res) => {
+secureRouter.get('/getIDs/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -250,7 +266,7 @@ secureRouter.get('/getIDs/:listname', (req, res) => {
 });
 
 // delete a list of desination IDs for a given list name
-secureRouter.delete('/delete/:listname', (req, res) => {
+secureRouter.delete('/delete/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
@@ -283,7 +299,7 @@ secureRouter.delete('/delete/:listname', (req, res) => {
 });
 
 // get a list of destination names, countries, coordinates, currency, and language of all destinations from list
-secureRouter.get('/getinfo/:listname', (req, res) => {
+secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname;
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
 
