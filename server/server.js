@@ -154,7 +154,7 @@ const authenticateToken = (req, res, next) => {
 secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the name of the (probably) new list from the parameters
     const listsPath = "data/lists.json"
-    const { listDescription, listVisibility, lastEditedDateTime } = req.body;
+    const { listDescription, listVisibility, lastEditedDateTime, ownerEmail } = req.body;
 
     // read the lists.json file
     fs.readFile(listsPath, "utf8", (err, data) => {
@@ -348,6 +348,30 @@ secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
 
         res.json(destinationInfo);
     }); // end of readfile
+});
+
+// get all lists associated with a user
+secureRouter.get('/getlists/:email', authenticateToken, (req, res) => {
+    const email = req.params.email;
+    const listsPath = "data/lists.json"; // hardcoded path to lists.json
+
+    // read the lists.json file
+    fs.readFile(listsPath, "utf8", (err, data) => {
+        if (err)
+            return res.status(500).send(`Error reading lists.json: ${err.message}`);
+
+        // parse the file
+        const lists = data.trim() ? JSON.parse(data) : [];
+
+        // filter lists associated with the user's email
+        const userLists = lists.filter(list => list.ownerEmail === email);
+
+        if (userLists.length === 0)
+            return res.status(404).send(`No lists found for email: ${email}`);
+
+        // Return the names of the lists
+        res.json(userLists.map(list => list.listName));
+    });
 });
 
 app.use('/api/open/destinations', openRouter);

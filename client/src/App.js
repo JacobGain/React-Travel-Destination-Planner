@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react
 import CreateEmailAccount from "./utils/CreateEmailAccount";
 import LoginEmailAccount from "./utils/LoginEmailAccount";
 import MainPage from "./utils/MainPage";
+import PrivateListPage from "./utils/PrivateListPage";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -44,6 +45,7 @@ const App = () => {
           <Route path="/signup" element={<CreateEmailAccount />} />
           <Route path="/login" element={<LoginEmailAccount />} />
           <Route path="/main" element={<MainPage />} />
+          <Route path="/my-lists" element={<PrivateListPage />}/>
         </Routes>
       </div>
     </Router>

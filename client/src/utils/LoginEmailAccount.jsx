@@ -18,8 +18,7 @@ const LoginEmailAccount = () => {
             // log in the user with Firebase
             const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
-            console.log(user.email);
-            console.log(user.emailVerified);
+            localStorage.setItem('userEmail', user.email)
 
             const response = await fetch('/api/open/JWTlogin', {
                 method: 'POST',
@@ -30,7 +29,7 @@ const LoginEmailAccount = () => {
             // Handle server response
             if (!response.ok) {
                 const errorMessage = await response.text();
-                alert(`Error: ${errorMessage}`); // Show error message if list doesn't exist or if there's a server error
+                alert(`Error: ${errorMessage}`); // show error message if list doesn't exist or if there's a server error
                 return;
             } // end of if
 

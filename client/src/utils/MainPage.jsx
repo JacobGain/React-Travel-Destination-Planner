@@ -7,6 +7,7 @@ import {
     addDestinationsToList,
     sortDisplayedList,
 } from "./AuthorizedFunctionality";
+import { NavigationBar } from "./NavigationBar"
 
 const MainPage = () => {
     const location = useLocation();
@@ -33,14 +34,12 @@ const MainPage = () => {
 
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>
+            <NavigationBar />
             <h1>Welcome to the Europe Destination Planner</h1>
             {isGuest ? (
                 <p>You are browsing as a guest. Some features are limited.</p>
             ) : (
                 <div>
-                    <p>
-                        Welcome back, <strong>{user}</strong>! Enjoy full access to the planner.
-                    </p>
                     <div id="list-section">
                         <h2>Manage Favourite Lists</h2>
                         <select

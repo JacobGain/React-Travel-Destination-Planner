@@ -1,9 +1,7 @@
 import DOMPurify from "dompurify";
 
-
-
 // Helper function to get the JWT token from localStorage (or wherever it is stored)
-function getJWTToken() {
+export function getJWTToken() {
     return localStorage.getItem("authToken");  // Adjust as needed depending on where you store the token
 }
 
