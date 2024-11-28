@@ -12,7 +12,6 @@ import { NavigationBar } from "./NavigationBar"
 const MainPage = () => {
     const location = useLocation();
     const isGuest = location.state?.isGuest || false;
-    const user = location.state?.user || null;
 
     const [listName, setListName] = useState("");
     const [listDescription, setListDescription] = useState("");

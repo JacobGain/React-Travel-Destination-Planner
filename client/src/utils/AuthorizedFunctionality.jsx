@@ -161,6 +161,8 @@ export async function createList(listnameParam, descriptionParam, visibilityPara
     const dateParam = getCurrentDayAndTime();
     console.log(dateParam);
 
+    const ownerEmailParam = localStorage.getItem("userEmail");
+
     const listname = listnameParam;
     const response = await fetch(`/api/secure/lists/newlist/${listname}`, {
         method: "POST", 
@@ -168,7 +170,8 @@ export async function createList(listnameParam, descriptionParam, visibilityPara
             'Authorization': `Bearer ${getJWTToken()}`,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ listDescription: descriptionParam, listVisibility: visibilityParam, lastEditedDateTime: dateParam })
+        body: JSON.stringify({ listDescription: descriptionParam, listVisibility: visibilityParam, 
+            lastEditedDateTime: dateParam, ownerEmail: ownerEmailParam })
     });
 
     // clear any existing content in the results container
@@ -215,13 +218,13 @@ export async function retrieveList(listnameParam, resultsContainer) {
 
     // Fetch and display each destination by ID from the list
     for (let i = 0; i < list.length; i++) {
-        const destinationResponse = await fetch(`/api/open/destinations/${list[i] + 1}`);
+        const destinationResponse = await fetch(`/api/open/destinations/${list[i] }`);
         if (destinationResponse.ok) {
             const destination = await destinationResponse.json();
-            console.log(destination);
+            //console.log(destination);
             displayDestination(destination, resultsContainer); // Display each destination
         } else {
-            console.error(`Failed to fetch destination with ID ${list[i] + 1}`);
+            console.error(`Failed to fetch destination with ID ${list[i] }`);
         } // end of if/else
     } // end of for
 }; // end of retrieveList function
@@ -327,6 +330,8 @@ export async function sortDisplayedList(sortFieldParam, listNameParam, resultsCo
     const sortField = sortFieldParam; // get field
     const listName = listNameParam; // get list name
 
+    
+
     // retrieve the list data
     const response = await fetch(`/api/secure/lists/getIDs/${listName}`, {
         method: "GET", headers: {
@@ -341,17 +346,18 @@ export async function sortDisplayedList(sortFieldParam, listNameParam, resultsCo
     } // error response, leave function
 
     // parse the array of destination IDs
-    const destinationIDs = await response.json();
+    const destinationIDsJSON = await response.json();
+    const destinationIDs = destinationIDsJSON.ids;
     const destinations = [];
 
     // fetch each destination details and push them to the array
     for (const id of destinationIDs) {
-        const destinationResponse = await fetch(`/api/open/destinations/${id + 1}`);
+        const destinationResponse = await fetch(`/api/open/destinations/${id }`);
         if (destinationResponse.ok) {
             const destination = await destinationResponse.json();
             destinations.push(destination);
         } else {
-            console.error(`Failed to fetch destination with ID ${id + 1}`);
+            console.error(`Failed to fetch destination with ID ${id }`);
         } // end of if/else
     } // end of for
 
@@ -374,6 +380,22 @@ export async function sortDisplayedList(sortFieldParam, listNameParam, resultsCo
     }); // end of forEach to display
 
 }; // end of sortDisplayedList function
+
+export async function getUserLists(email) {
+    const response = await fetch(`/api/secure/lists/getlists/${email}`, {
+        method: "GET",
+        headers: {
+            'Authorization': `Bearer ${getJWTToken()}`
+        }
+    });
+
+    if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(errorMessage);
+    }
+
+    return await response.json(); // Return list names
+}
 
 // function to validate text-only input
 export function validateTextInput(input) {

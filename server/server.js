@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 
 // get all information from given destination ID
 openRouter.get('/:id', (req, res) => {
-    const destination = destinationsJSON[req.params.id - 1];
+    const destination = destinationsJSON[req.params.id ];
     const destinationInfo = {
         Destination: destination["Destination"],
         Region: destination["Region"],
@@ -69,7 +69,7 @@ openRouter.get('/:id', (req, res) => {
 
 // get geographical coordinates of a given destination ID
 openRouter.get('geocoordinates/:id', (req, res) => {
-    const destination = destinationsJSON[req.params.id - 1];
+    const destination = destinationsJSON[req.params.id ];
     const coordinates = {
         Latitude: destination["Latitude"],
         Longitude: destination["Longitude"]
@@ -181,6 +181,7 @@ secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
 
         // add the new list with an empty array of destination IDs
         const newList = {
+            ownerEmail: ownerEmail,
             listName: listname,
             listDescription: listDescription,
             listVisibility: listVisibility,
@@ -307,69 +308,57 @@ secureRouter.delete('/delete/:listname', authenticateToken, (req, res) => {
     }); // end of readfile
 });
 
-// get a list of destination names, countries, coordinates, currency, and language of all destinations from list
+// Get detailed list info including description and destinations
 secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname;
-    const listsPath = "data/lists.json"; // hardcoded path to lists.json
+    const listsPath = "data/lists.json"; // Hardcoded path to lists.json
 
     fs.readFile(listsPath, "utf8", (err, data) => {
-        let lists; // create an object to store the lists
-
-        if (err) // cannot read lists.json
+        if (err) {
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
-
-        // parse the data in the file if read successfully
-        lists = data.trim() ? JSON.parse(data) : [];
-        let listindex = -1;
-        for(let i = 0; i < lists.length; i++) {
-            if(lists[i].listName === listname)
-                listindex = i;
         }
-        // check if the list exists
-        if (listindex === -1)
+
+        const lists = data.trim() ? JSON.parse(data) : [];
+        const list = lists.find(l => l.listName === listname);
+
+        if (!list) {
             return res.status(404).send(`List "${listname}" does not exist`);
+        }
 
-        // store the destination IDs of given list in an object
-        const destinationIDs = lists[listindex].listIDs;
+        const destinationIDs = list.listIDs;
 
-        // store info of destination
-        const destinationInfo = destinationIDs.map(id => {
-            const destination = destinationsJSON[id - 1];
+        // Get destination information
+        const destinations = destinationIDs.map(id => {
+            const destination = destinationsJSON[id];
             return {
                 Destination: destination["Destination"],
-                Region: destination["Region"],
                 Country: destination["Country"],
-                Latitude: destination["Latitude"],
-                Longitude: destination["Longitude"],
-                Currency: destination["Currency"],
-                Language: destination["Language"]
-            }; // return the object with appropriate info
-        }); // end of map
+            };
+        });
 
-        res.json(destinationInfo);
-    }); // end of readfile
+        res.json({
+            description: list.listDescription,
+            destinations,
+        });
+    });
 });
 
-// get all lists associated with a user
+
+// Get all lists associated with a user
 secureRouter.get('/getlists/:email', authenticateToken, (req, res) => {
     const email = req.params.email;
-    const listsPath = "data/lists.json"; // hardcoded path to lists.json
+    const listsPath = "data/lists.json"; // Hardcoded path to lists.json
 
-    // read the lists.json file
     fs.readFile(listsPath, "utf8", (err, data) => {
         if (err)
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
 
-        // parse the file
         const lists = data.trim() ? JSON.parse(data) : [];
 
-        // filter lists associated with the user's email
+        // Filter lists associated with the user's email
         const userLists = lists.filter(list => list.ownerEmail === email);
 
-        if (userLists.length === 0)
-            return res.status(404).send(`No lists found for email: ${email}`);
-
-        // Return the names of the lists
+        // Return array of list names
         res.json(userLists.map(list => list.listName));
     });
 });
