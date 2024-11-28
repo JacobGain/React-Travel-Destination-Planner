@@ -59,6 +59,7 @@ const PrivateListPage = () => {
 
     useEffect(() => {
         fetchLists();
+        // eslint-disable-next-line
     }, []);
 
     return (
