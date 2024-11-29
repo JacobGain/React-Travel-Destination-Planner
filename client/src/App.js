@@ -6,6 +6,7 @@ import LoginEmailAccount from "./utils/LoginEmailAccount";
 import MainPage from "./utils/MainPage";
 import PrivateListPage from "./utils/PrivateListPage";
 import EditListPage from './utils/EditListPage';
+import PublicListPage from './utils/PublicListPage';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -48,6 +49,7 @@ const App = () => {
           <Route path="/main" element={<MainPage />} />
           <Route path="/my-lists" element={<PrivateListPage />}/>
           <Route path="/edit-list" element={<EditListPage />}/>
+          <Route path="/public-lists" element={<PublicListPage />}/>
         </Routes>
       </div>
     </Router>

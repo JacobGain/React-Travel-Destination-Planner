@@ -440,5 +440,23 @@ secureRouter.put('/editlist/:listname', authenticateToken, (req, res) => {
     });
 });
 
+secureRouter.get('/getpubliclists', authenticateToken, (req, res) => {
+    const listsPath = "data/lists.json";
+
+    fs.readFile(listsPath, "utf8", (err, data) => {
+        if (err) {
+            return res.status(500).send(`Error reading lists.json: ${err.message}`);
+        }
+
+        const lists = data.trim() ? JSON.parse(data) : [];
+
+        // Filter public lists
+        const publicLists = lists.filter((list) => list.listVisibility === "public");
+
+        // Send the list names
+        res.json(publicLists.map((list) => list.listName));
+    });
+});
+
 app.use('/api/open/destinations', openRouter);
 app.use('/api/secure/lists', secureRouter);
