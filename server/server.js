@@ -44,7 +44,12 @@ app.use((req, res, next) => {
 
 // get all information from given destination ID
 openRouter.get('/:id', (req, res) => {
-    const destination = destinationsJSON[req.params.id ];
+
+    if (id < 0 || id >= destinationsJSON.length) {
+        return res.status(404).send('Destination not found.');
+    }
+
+    const destination = destinationsJSON[req.params.id];
     const destinationInfo = {
         Destination: destination["Destination"],
         Region: destination["Region"],
@@ -69,7 +74,7 @@ openRouter.get('/:id', (req, res) => {
 
 // get geographical coordinates of a given destination ID
 openRouter.get('geocoordinates/:id', (req, res) => {
-    const destination = destinationsJSON[req.params.id ];
+    const destination = destinationsJSON[req.params.id];
     const coordinates = {
         Latitude: destination["Latitude"],
         Longitude: destination["Longitude"]
@@ -203,7 +208,7 @@ secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
 });
 
 // save list of IDs to a given list name, return error if name does not exist
-secureRouter.put('/updatelist/:listname',authenticateToken, (req, res) => {
+secureRouter.put('/updatelist/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname; // get the listname from the parameters
     const listsPath = "data/lists.json"; // hardcoded path to lists.json
     const { destinationIDs, lastEditedDateTime } = req.body; // get the destination IDs from the request body
@@ -218,8 +223,8 @@ secureRouter.put('/updatelist/:listname',authenticateToken, (req, res) => {
         // parse the data in the file if read successfully
         lists = data.trim() ? JSON.parse(data) : {};
         let listindex = -1;
-        for(let i = 0; i < lists.length; i++) {
-            if(lists[i].listName === listname)
+        for (let i = 0; i < lists.length; i++) {
+            if (lists[i].listName === listname)
                 listindex = i;
         }
         // check if the list exists
@@ -257,8 +262,8 @@ secureRouter.get('/getIDs/:listname', authenticateToken, (req, res) => {
         // parse the data in the file if read successfully
         lists = data.trim() ? JSON.parse(data) : [];
         let listindex = -1;
-        for(let i = 0; i < lists.length; i++) {
-            if(lists[i].listName === listname)
+        for (let i = 0; i < lists.length; i++) {
+            if (lists[i].listName === listname)
                 listindex = i;
         }
         // check if the list exists
@@ -286,8 +291,8 @@ secureRouter.delete('/delete/:listname', authenticateToken, (req, res) => {
         // parse the data in the file if read successfully
         lists = data.trim() ? JSON.parse(data) : [];
         let listindex = -1;
-        for(let i = 0; i < lists.length; i++) {
-            if(lists[i].listName === listname)
+        for (let i = 0; i < lists.length; i++) {
+            if (lists[i].listName === listname)
                 listindex = i;
         }
         // check if the list exists
@@ -308,41 +313,59 @@ secureRouter.delete('/delete/:listname', authenticateToken, (req, res) => {
     }); // end of readfile
 });
 
-// Get detailed list info including description and destinations
 secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
     const listname = req.params.listname;
-    const listsPath = "data/lists.json"; // Hardcoded path to lists.json
+    const listsPath = "data/lists.json";
 
     fs.readFile(listsPath, "utf8", (err, data) => {
-        if (err) {
+
+        let lists; // create an object to store the lists
+
+        if (err) // cannot read lists.json
             return res.status(500).send(`Error reading lists.json: ${err.message}`);
+
+        // parse the data in the file if read successfully
+        lists = data.trim() ? JSON.parse(data) : [];
+        let listindex = -1;
+        for (let i = 0; i < lists.length; i++) {
+            if (lists[i].listName === listname)
+                listindex = i;
         }
-
-        const lists = data.trim() ? JSON.parse(data) : [];
-        const list = lists.find(l => l.listName === listname);
-
-        if (!list) {
+        // check if the list exists
+        if (listindex === -1)
             return res.status(404).send(`List "${listname}" does not exist`);
-        }
 
-        const destinationIDs = list.listIDs;
+        const list = lists[listindex];
 
-        // Get destination information
+        const destinationIDs = list.listIDs || [];
+
+        // Map destination IDs to destination details
         const destinations = destinationIDs.map(id => {
+            if (id < 0 || id >= destinationsJSON.length) {
+                console.warn(`Destination with ID ${id} is out of range.`);
+                return null; // Skip invalid IDs
+            }
             const destination = destinationsJSON[id];
             return {
+                id,
                 Destination: destination["Destination"],
-                Country: destination["Country"],
+                Country: destination["Country"]
             };
-        });
+        }).filter(destination => destination !== null); // Filter out invalid destinations
 
-        res.json({
-            description: list.listDescription,
+        // Construct the response object
+        const response = {
+            listName: list.listName,
+            listDescription: list.listDescription,
+            listVisibility: list.listVisibility,
             destinations,
-        });
+            dateEdited: list.dateEdited
+        };
+
+        // Send the response
+        res.json(response);
     });
 });
-
 
 // Get all lists associated with a user
 secureRouter.get('/getlists/:email', authenticateToken, (req, res) => {
@@ -360,6 +383,60 @@ secureRouter.get('/getlists/:email', authenticateToken, (req, res) => {
 
         // Return array of list names
         res.json(userLists.map(list => list.listName));
+    });
+});
+
+secureRouter.put('/editlist/:listname', authenticateToken, (req, res) => {
+    const originalListName = req.params.listname;
+    const listsPath = "data/lists.json";
+    const {
+        newListName,
+        listDescription,
+        listVisibility,
+        destinationNames, // Destination names provided from the frontend
+        lastEditedDateTime,
+    } = req.body;
+
+    fs.readFile(listsPath, "utf8", (err, data) => {
+        if (err) {
+            return res.status(500).send(`Error reading lists.json: ${err.message}`);
+        }
+
+        let lists = data.trim() ? JSON.parse(data) : [];
+        const listIndex = lists.findIndex((list) => list.listName === originalListName);
+
+        if (listIndex === -1) {
+            return res.status(404).send(`List "${originalListName}" does not exist.`);
+        }
+
+        // Normalize destination names and map them to IDs
+        const destinationIDs = destinationNames.map((name) => {
+            const normalized = name.trim().toLowerCase(); // Normalize the input
+            const destination = destinationsJSON.find(
+                (d) => d.Destination.toLowerCase() === normalized
+            );
+            if (!destination) {
+                console.warn(`Destination "${name}" not found in destinationsJSON.`);
+            }
+            return destination ? destinationsJSON.indexOf(destination) : null;
+        }).filter((id) => id !== null); // Remove invalid IDs
+
+        // Update list properties
+        lists[listIndex] = {
+            ...lists[listIndex],
+            listName: newListName || lists[listIndex].listName,
+            listDescription: listDescription || lists[listIndex].listDescription,
+            listVisibility: listVisibility || lists[listIndex].listVisibility,
+            listIDs: destinationIDs.length > 0 ? destinationIDs : lists[listIndex].listIDs,
+            dateEdited: lastEditedDateTime || lists[listIndex].dateEdited,
+        };
+
+        fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
+            if (err) {
+                return res.status(500).send(`Error writing to lists.json: ${err.message}`);
+            }
+            res.send(`List "${newListName || originalListName}" updated successfully.`);
+        });
     });
 });
 

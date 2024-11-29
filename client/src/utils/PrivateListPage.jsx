@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { NavigationBar } from "./NavigationBar";
 import { getJWTToken } from "./AuthorizedFunctionality";
+import { useNavigate } from "react-router-dom";
 
 const PrivateListPage = () => {
+    const navigate = useNavigate();
     const userEmail = localStorage.getItem("userEmail");
     const [lists, setLists] = useState([]); // Store list names
     const [loading, setLoading] = useState(true);
@@ -48,13 +50,28 @@ const PrivateListPage = () => {
             const details = await response.json();
             setLists(prevLists =>
                 prevLists.map(list =>
-                    list.listName === listName ? { ...list, details, expanded: !list.expanded } : list
+                    list.listName === listName
+                        ? {
+                            ...list,
+                            details: {
+                                description: details.listDescription,
+                                visibility: details.listVisibility,
+                                destinations: details.destinations,
+                            },
+                            expanded: !list.expanded,
+                        }
+                        : list
                 )
             );
         } catch (err) {
             console.error(`Error fetching details for list "${listName}":`, err);
             setError("An error occurred while fetching list details. Please try again.");
         }
+    };
+
+    const handleEdit = (listName) => {
+        localStorage.setItem("listToEdit", listName); // Store list name in local storage
+        navigate("/edit-list"); // Navigate to the EditListPage
     };
 
     useEffect(() => {
@@ -78,6 +95,7 @@ const PrivateListPage = () => {
                             <button onClick={() => fetchListDetails(list.listName)}>
                                 {list.expanded ? "Hide Details" : "Show More"}
                             </button>
+                            <button onClick={() => handleEdit(list.listName)}>Edit</button>
                             {list.expanded && list.details && (
                                 <div>
                                     <p><strong>Description:</strong> {list.details.description}</p>

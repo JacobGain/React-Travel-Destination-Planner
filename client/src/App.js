@@ -5,6 +5,7 @@ import CreateEmailAccount from "./utils/CreateEmailAccount";
 import LoginEmailAccount from "./utils/LoginEmailAccount";
 import MainPage from "./utils/MainPage";
 import PrivateListPage from "./utils/PrivateListPage";
+import EditListPage from './utils/EditListPage';
 
 const Home = () => {
   const navigate = useNavigate();
@@ -46,6 +47,7 @@ const App = () => {
           <Route path="/login" element={<LoginEmailAccount />} />
           <Route path="/main" element={<MainPage />} />
           <Route path="/my-lists" element={<PrivateListPage />}/>
+          <Route path="/edit-list" element={<EditListPage />}/>
         </Routes>
       </div>
     </Router>

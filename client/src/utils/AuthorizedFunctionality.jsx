@@ -5,7 +5,7 @@ export function getJWTToken() {
     return localStorage.getItem("authToken");  // Adjust as needed depending on where you store the token
 }
 
-function getCurrentDayAndTime() {
+export function getCurrentDayAndTime() {
     const now = new Date();
 
     // Get day, time (hours and minutes only)
