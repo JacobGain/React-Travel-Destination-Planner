@@ -61,6 +61,7 @@ const PrivateListPage = () => {
                                     expanded: false,
                                     fullDetails: null,
                                 })),
+                                reviews: details.reviews || [], // Handle missing or empty reviews
                             },
                             expanded: !list.expanded,
                         }
@@ -169,6 +170,21 @@ const PrivateListPage = () => {
                                             </li>
                                         ))}
                                     </ul>
+                                    {/* Display reviews */}
+                                    <div>
+                                        <h4>Reviews</h4>
+                                        {list.details.reviews.length > 0 ? (
+                                            list.details.reviews.map((review, idx) => (
+                                                <div key={idx} style={styles.review}>
+                                                    <p><strong>By: {review.userEmail}</strong></p>
+                                                    <p>Rating: {review.rating}</p>
+                                                    <p>{review.comment}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p>No reviews available for this list.</p>
+                                        )}
+                                    </div>
                                 </div>
                             )}
                         </div>
@@ -202,5 +218,12 @@ const styles = {
         border: "1px solid #ddd",
         borderRadius: "5px",
         backgroundColor: "#f1f1f1",
+    },
+    review: {
+        marginTop: "10px",
+        padding: "10px",
+        border: "1px solid #ddd",
+        borderRadius: "5px",
+        backgroundColor: "#fafafa",
     },
 };

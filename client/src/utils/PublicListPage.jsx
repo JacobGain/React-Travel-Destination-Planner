@@ -1,8 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { NavigationBar } from "./NavigationBar";
 import { getJWTToken } from "./AuthorizedFunctionality";
+import { useLocation } from "react-router-dom";
 
 const PublicListPage = () => {
+
+    const { state } = useLocation();
+    const isGuest = state?.isGuest || false;
+
+    // const userEmail = localStorage.getItem("userEmail");
+
     const [lists, setLists] = useState([]); // Store public list names
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -51,22 +58,24 @@ const PublicListPage = () => {
             }
 
             const details = await response.json();
+
             setLists((prevLists) =>
                 prevLists.map((list) =>
                     list.listName === listName
                         ? {
-                              ...list,
-                              details: {
-                                  description: details.listDescription,
-                                  visibility: details.listVisibility,
-                                  destinations: details.destinations.map((dest) => ({
-                                      ...dest,
-                                      expanded: false,
-                                      fullDetails: null,
-                                  })),
-                              },
-                              expanded: !list.expanded,
-                          }
+                            ...list,
+                            details: {
+                                description: details.listDescription,
+                                visibility: details.listVisibility,
+                                destinations: details.destinations.map((dest) => ({
+                                    ...dest,
+                                    expanded: false,
+                                    fullDetails: null,
+                                })),
+                                reviews: details.reviews || [], // Handle missing or empty reviews
+                            },
+                            expanded: !list.expanded,
+                        }
                         : list
                 )
             );
@@ -75,6 +84,7 @@ const PublicListPage = () => {
             setError("An error occurred while fetching list details. Please try again.");
         }
     };
+
 
     const fetchDestinationDetails = async (destinationId, listName) => {
         try {
@@ -91,16 +101,16 @@ const PublicListPage = () => {
                 prevLists.map((list) =>
                     list.listName === listName
                         ? {
-                              ...list,
-                              details: {
-                                  ...list.details,
-                                  destinations: list.details.destinations.map((dest) =>
-                                      dest.id === destinationId
-                                          ? { ...dest, fullDetails, expanded: !dest.expanded }
-                                          : dest
-                                  ),
-                              },
-                          }
+                            ...list,
+                            details: {
+                                ...list.details,
+                                destinations: list.details.destinations.map((dest) =>
+                                    dest.id === destinationId
+                                        ? { ...dest, fullDetails, expanded: !dest.expanded }
+                                        : dest
+                                ),
+                            },
+                        }
                         : list
                 )
             );
@@ -168,6 +178,77 @@ const PublicListPage = () => {
                                             </li>
                                         ))}
                                     </ul>
+                                    {/* Display reviews */}
+                                    <div>
+                                        <h4>Reviews</h4>
+                                        {list.details.reviews.length > 0 ? (
+                                            list.details.reviews.map((review, idx) => (
+                                                <div key={idx} style={styles.review}>
+                                                    <p><strong>By: {review.userEmail}</strong></p>
+                                                    <p>Rating: {review.rating}</p>
+                                                    <p>{review.comment}</p>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <p>No reviews available for this list.</p>
+                                        )}
+
+                                        {/* Review Form */}
+                                        {!isGuest && (
+                                            <form
+                                                onSubmit={(e) => {
+                                                    e.preventDefault();
+                                                    const rating = parseInt(e.target.rating.value, 10);
+                                                    const comment = e.target.comment.value;
+
+                                                    fetch(`/api/secure/lists/addreview/${list.listName}`, {
+                                                        method: "POST",
+                                                        headers: {
+                                                            "Content-Type": "application/json",
+                                                            Authorization: `Bearer ${getJWTToken()}`,
+                                                        },
+                                                        body: JSON.stringify({
+                                                            userEmail: localStorage.getItem("userEmail"),
+                                                            rating,
+                                                            comment,
+                                                        }),
+                                                    })
+                                                        .then((response) => {
+                                                            if (!response.ok) {
+                                                                throw new Error(`Failed to add review: ${response.statusText}`);
+                                                            }
+                                                            return response.text();
+                                                        })
+                                                        .then((message) => {
+                                                            alert(message);
+                                                            fetchListDetails(list.listName); // Refresh list details
+                                                        })
+                                                        .catch((err) => {
+                                                            console.error(err);
+                                                            alert("An error occurred while adding the review.");
+                                                        });
+                                                }}
+                                            >
+                                                <h5>Add a Review</h5>
+                                                <label>
+                                                    Rating (1-10):
+                                                    <input type="number" name="rating" min="1" max="10" required />
+                                                </label>
+                                                <br />
+                                                <label>
+                                                    Comment:
+                                                    <input type="text" name="comment" placeholder="Leave a comment (optional)" />
+                                                </label>
+                                                <br />
+                                                <button type="submit">Submit Review</button>
+                                            </form>
+                                        )}
+
+                                        {isGuest && (
+                                            <p>You must be logged in to add reviews.</p>
+                                        )}
+                                    </div>
+
                                 </div>
                             )}
                         </div>

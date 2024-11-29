@@ -187,7 +187,8 @@ secureRouter.post('/newlist/:listname', authenticateToken, (req, res) => {
             listDescription: listDescription,
             listVisibility: listVisibility,
             listIDs: [],
-            dateEdited: lastEditedDateTime
+            dateEdited: lastEditedDateTime,
+            reviews: []
         }
 
         lists.push(newList);
@@ -355,7 +356,8 @@ secureRouter.get('/getinfo/:listname', authenticateToken, (req, res) => {
             listDescription: list.listDescription,
             listVisibility: list.listVisibility,
             destinations,
-            dateEdited: list.dateEdited
+            dateEdited: list.dateEdited,
+            reviews: list.reviews
         };
 
         // Send the response
@@ -453,6 +455,48 @@ secureRouter.get('/getpubliclists', authenticateToken, (req, res) => {
         res.json(publicLists.map((list) => list.listName));
     });
 });
+
+secureRouter.post('/addreview/:listname', authenticateToken, (req, res) => {
+    const listname = req.params.listname; // Get the list name from the parameters
+    const listsPath = "data/lists.json";
+    const { userEmail, rating, comment } = req.body; // Destructure the review fields from the request body
+
+    if (!rating || typeof rating !== 'number' || rating < 1 || rating > 10) {
+        return res.status(400).send('Rating must be a number between 1 and 10.');
+    }
+
+    // Default the comment to "No comments for this review" if it's empty or undefined
+    const sanitizedComment = comment?.trim() || "No comments for this review";
+
+    fs.readFile(listsPath, "utf8", (err, data) => {
+        if (err) {
+            return res.status(500).send(`Error reading lists.json: ${err.message}`);
+        }
+
+        let lists = data.trim() ? JSON.parse(data) : [];
+        const listIndex = lists.findIndex((list) => list.listName === listname);
+
+        if (listIndex === -1) {
+            return res.status(404).send(`List "${listname}" does not exist.`);
+        }
+
+        // Add the new review to the list's reviews array
+        const newReview = { userEmail, rating, comment: sanitizedComment };
+        if (!lists[listIndex].reviews) {
+            lists[listIndex].reviews = []; // Initialize reviews array if it doesn't exist
+        }
+        lists[listIndex].reviews.push(newReview);
+
+        // Save the updated list back to the file
+        fs.writeFile(listsPath, JSON.stringify(lists, null, 2), (err) => {
+            if (err) {
+                return res.status(500).send(`Error writing to lists.json: ${err.message}`);
+            }
+            res.send(`Review added successfully to list "${listname}".`);
+        });
+    });
+});
+
 
 app.use('/api/open/destinations', openRouter);
 app.use('/api/secure/lists', secureRouter);
