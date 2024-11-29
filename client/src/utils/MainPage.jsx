@@ -2,10 +2,10 @@ import React, { useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import {
     createList,
-    retrieveList,
+    // retrieveList,
     deleteList,
     addDestinationsToList,
-    sortDisplayedList,
+    // sortDisplayedList,
 } from "./AuthorizedFunctionality";
 import { NavigationBar } from "./NavigationBar"
 
@@ -22,14 +22,12 @@ const MainPage = () => {
     // Wrapping imported functions to pass arguments
     const handleCreateList = () =>
         createList(listName, listDescription, visibility, resultsContainerRef.current);
-    const handleRetrieveList = () =>
-        retrieveList(listName, resultsContainerRef.current);
+    // const handleRetrieveList = () =>
+    //     retrieveList(listName, resultsContainerRef.current);
     const handleDeleteList = () =>
         deleteList(listName, resultsContainerRef.current);
     const handleAddDestinations = () =>
         addDestinationsToList(destinationNames, listName, resultsContainerRef.current);
-    const handleSortList = (event) =>
-        sortDisplayedList(event.target.value, listName, resultsContainerRef.current);
 
     return (
         <div style={{ textAlign: "center", marginTop: "50px" }}>
@@ -64,7 +62,7 @@ const MainPage = () => {
                             onChange={(e) => setListDescription(e.target.value)}
                         />
                         <button onClick={handleCreateList}>Create List</button>
-                        <button onClick={handleRetrieveList}>Retrieve List</button>
+                        {/* <button onClick={handleRetrieveList}>Retrieve List</button> */}
                         <button onClick={handleDeleteList}>Delete List</button>
                         <br />
                         <input
@@ -77,14 +75,14 @@ const MainPage = () => {
                         <button onClick={handleAddDestinations}>
                             Add Destinations to List
                         </button>
-                        <div id="sort-section">
+                        {/* <div id="sort-section">
                             <label htmlFor="sort-field">Sort By:</label>
                             <select id="sort-field" onChange={handleSortList}>
                                 <option value="Destination">Name</option>
                                 <option value="Region">Region</option>
                                 <option value="Country">Country</option>
                             </select>
-                        </div>
+                        </div> */}
                         <div id="lists-display" ref={resultsContainerRef}></div>
                     </div>
                 </div>
