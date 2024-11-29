@@ -45,10 +45,6 @@ app.use((req, res, next) => {
 // get all information from given destination ID
 openRouter.get('/:id', (req, res) => {
 
-    if (id < 0 || id >= destinationsJSON.length) {
-        return res.status(404).send('Destination not found.');
-    }
-
     const destination = destinationsJSON[req.params.id];
     const destinationInfo = {
         Destination: destination["Destination"],
