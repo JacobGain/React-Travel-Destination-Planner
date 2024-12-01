@@ -131,21 +131,23 @@ const PrivateListPage = () => {
                     lists.map((list, index) => (
                         <div key={index} style={styles.listContainer}>
                             <h3>{list.listName}</h3>
-                            <button onClick={() => fetchListDetails(list.listName)}>
+                            <button onClick={() => fetchListDetails(list.listName)} style={styles.button}>
                                 {list.expanded ? "Hide Details" : "Show Details"}
                             </button>
-                            <button onClick={() => handleEdit(list.listName)}>Edit</button>
+                            <br></br>
+                            <button onClick={() => handleEdit(list.listName)} style={styles.button}>Edit</button>
                             {list.expanded && list.details && (
                                 <div>
                                     <p><strong>Description:</strong> {list.details.description}</p>
                                     <ul style={{ listStyleType: "none", padding: 0 }}>
                                         {list.details.destinations.map((destination, idx) => (
                                             <li key={idx} style={styles.listItem}>
-                                                <strong>{destination.Destination}</strong> - {destination.Country}
+                                                <strong>{destination.Destination}</strong> - {destination.Country} <br></br>
                                                 <button
                                                     onClick={() =>
                                                         fetchDestinationDetails(list.listName, destination.id)
                                                     }
+                                                    style={styles.button}
                                                 >
                                                     {destination.expanded ? "Hide Info" : "Show Info"}
                                                 </button>
@@ -201,29 +203,63 @@ export default PrivateListPage;
 
 const styles = {
     listContainer: {
-        margin: "10px 0",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
         padding: "15px",
-        border: "1px solid #ccc",
-        borderRadius: "5px",
+        margin: "15px 0",
         backgroundColor: "#f9f9f9",
+        textAlign: "left", // Align content to the left
+        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
     },
     listItem: {
-        margin: "5px 0",
-        padding: "5px",
+        margin: "10px 0",
+        padding: "10px",
         borderBottom: "1px solid #ddd",
+        fontSize: "1rem",
+        lineHeight: "1.5",
     },
     destinationDetails: {
         marginTop: "10px",
-        padding: "10px",
-        border: "1px solid #ddd",
-        borderRadius: "5px",
-        backgroundColor: "#f1f1f1",
+        padding: "15px",
+        backgroundColor: "#e9ecef",
+        borderRadius: "8px",
+        border: "1px solid #ccc",
+        fontSize: "0.95rem",
+        lineHeight: "1.6",
     },
     review: {
-        marginTop: "10px",
-        padding: "10px",
+        marginTop: "15px",
+        padding: "15px",
         border: "1px solid #ddd",
-        borderRadius: "5px",
+        borderRadius: "8px",
         backgroundColor: "#fafafa",
+        boxShadow: "0px 1px 3px rgba(0, 0, 0, 0.1)",
+        fontSize: "0.95rem",
+        lineHeight: "1.6",
+    },
+    button: {
+        padding: "10px 20px",
+        margin: "10px 0",
+        backgroundColor: "#ED2939",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        fontSize: "0.95rem",
+        cursor: "pointer",
+        transition: "background-color 0.3s ease",
+    },
+    buttonHover: {
+        backgroundColor: "#7C0A02",
+    },
+    heading: {
+        fontSize: "1.25rem",
+        marginBottom: "10px",
+        color: "#333",
+    },
+    description: {
+        fontSize: "1rem",
+        marginBottom: "10px",
+        color: "#666",
     },
 };

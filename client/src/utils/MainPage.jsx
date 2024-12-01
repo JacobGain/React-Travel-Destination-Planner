@@ -1,8 +1,9 @@
 import React, { useState, useRef } from "react";
 import { NavigationBar } from "./NavigationBar";
 import { searchDestinations, changePage } from "./UnauthorizedFunctionality";
+import { useLocation } from "react-router-dom";
 
-const MainPage = ({ isGuest }) => {
+const MainPage = () => {
     // State for list management
     const [listName, setListName] = useState("");
     const [listDescription, setListDescription] = useState("");
@@ -17,6 +18,10 @@ const MainPage = ({ isGuest }) => {
     const [pages, setPages] = useState([]);
     const [currentPage, setCurrentPage] = useState(0);
     const [error, setError] = useState(null);
+
+    const { state } = useLocation();
+    const isGuest = state?.isGuest || false;
+    //const userEmail = localStorage.getItem("userEmail");
 
     // Handle destination details fetching
     const fetchDestinationDetails = async (destinationId) => {
@@ -75,7 +80,7 @@ const MainPage = ({ isGuest }) => {
             {/* Destination Search Section */}
             <div>
                 <h2>Search Destinations</h2>
-                <select value={searchField} onChange={(e) => setSearchField(e.target.value)}>
+                <select value={searchField} onChange={(e) => setSearchField(e.target.value)} style={styles.button}>
                     <option value="Country">Country</option>
                     <option value="Region">Region</option>
                     <option value="Destination">Destination</option>
@@ -85,17 +90,18 @@ const MainPage = ({ isGuest }) => {
                     placeholder="Enter search pattern"
                     value={searchPattern}
                     onChange={(e) => setSearchPattern(e.target.value)}
+                    style={styles.searchField}
                 />
-                <button onClick={handleSearch}>Search</button>
+                <button onClick={handleSearch} style={styles.button}>Search</button>
                 {error && <p style={{ color: "red" }}>{error}</p>}
                 <div id="search-results">
                     {results.length > 0 ? (
                         results.map((result, idx) => (
                             <div key={idx} style={styles.resultItem}>
-                                <strong>{result.Destination}</strong> - {result.Country}
+                                <strong>{result.Destination}</strong> - {result.Country} 
                                 <button
                                     onClick={() => fetchDestinationDetails(result.id)}
-                                    style={{ marginLeft: "10px" }}
+                                    style={styles.button}
                                 >
                                     {result.expanded ? "Hide Info" : "Show Info"}
                                 </button>
@@ -103,7 +109,7 @@ const MainPage = ({ isGuest }) => {
                                     href={`https://duckduckgo.com/${result.Destination}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    style={{ marginLeft: "10px" }}
+                                    style={styles.ddgLink}
                                 >
                                     Search on DDG
                                 </a>
@@ -128,11 +134,11 @@ const MainPage = ({ isGuest }) => {
                             </div>
                         ))
                     ) : (
-                        !error && <p>No results found. Try a different search pattern.</p>
+                        !error && <p>No results found.</p>
                     )}
                 </div>
-                <button onClick={() => handlePageChange(-1)}>Previous</button>
-                <button onClick={() => handlePageChange(1)}>Next</button>
+                <button onClick={() => handlePageChange(-1)} style={styles.button}>Previous</button>
+                <button onClick={() => handlePageChange(1)} style={styles.button}>Next</button>
             </div>
 
             {/* List Management Section (only for non-guests) */}
@@ -144,6 +150,7 @@ const MainPage = ({ isGuest }) => {
                             name="visibility"
                             value={visibility}
                             onChange={(e) => setListVisibility(e.target.value)}
+                            style={styles.button}
                         >
                             <option value="private">Private</option>
                             <option value="public">Public</option>
@@ -154,6 +161,7 @@ const MainPage = ({ isGuest }) => {
                             placeholder="Enter list name"
                             value={listName}
                             onChange={(e) => setListName(e.target.value)}
+                            style={styles.inputField}
                         />
                         <input
                             type="text"
@@ -161,9 +169,10 @@ const MainPage = ({ isGuest }) => {
                             placeholder="Enter list description"
                             value={listDescription}
                             onChange={(e) => setListDescription(e.target.value)}
+                            style={styles.inputField}
                         />
-                        <button onClick={handleCreateList}>Create List</button>
-                        <button onClick={handleDeleteList}>Delete List</button>
+                        <button onClick={handleCreateList} style={styles.button}>Create List</button>
+                        <button onClick={handleDeleteList} style={styles.button}>Delete List</button>
                         <br />
                         <input
                             type="text"
@@ -171,8 +180,9 @@ const MainPage = ({ isGuest }) => {
                             placeholder="Enter destination names"
                             value={destinationNames}
                             onChange={(e) => setDestinationNames(e.target.value)}
+                            style={styles.inputField}
                         />
-                        <button onClick={handleAddDestinations}>Add Destinations to List</button>
+                        <button onClick={handleAddDestinations} style={styles.button}>Add Destinations to List</button>
                         <div id="lists-display" ref={resultsContainerRef}></div>
                     </div>
                 </div>
@@ -181,22 +191,68 @@ const MainPage = ({ isGuest }) => {
     );
 };
 
+export default MainPage;
+
 const styles = {
     resultItem: {
-        border: "1px solid #ccc",
-        borderRadius: "5px",
-        padding: "10px",
-        margin: "10px 0",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        padding: "15px",
+        margin: "15px 0",
         backgroundColor: "#f9f9f9",
         textAlign: "left",
+        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
     },
     destinationDetails: {
         marginTop: "10px",
-        padding: "10px",
-        backgroundColor: "#f1f1f1",
-        borderRadius: "5px",
+        padding: "15px",
+        backgroundColor: "#e9ecef",
+        borderRadius: "8px",
         border: "1px solid #ccc",
+        fontSize: "0.95rem",
+        lineHeight: "1.6",
     },
+    button: {
+        padding: "10px 20px",
+        margin: "10px",
+        backgroundColor: "#ED2939",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        fontSize: "0.95rem",
+        cursor: "pointer",
+        transition: "background-color 0.3s ease",
+    },
+    searchButtonHover: {
+        backgroundColor: "#7COA02", // Slightly darker for hover
+    },
+    ddgLink: {
+        color: "#7COA02",
+        textDecoration: "none",
+        marginLeft: "10px",
+        fontSize: "0.9rem",
+        fontWeight: "bold",
+        transition: "color 0.3s ease",
+    },
+    searchField: {
+        padding: "10px 20px",
+        margin: "10px",
+        fontSize: "0.95rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        boxSizing: "border-box",
+        width: "400px", // Adjust width to align well with button
+        transition: "border-color 0.3s ease",
+    },
+    inputField: {
+        padding: "10px 20px",
+        margin: "10px",
+        fontSize: "0.95rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        boxSizing: "border-box",
+        width: "200px", // Adjust width to align well with button
+        transition: "border-color 0.3s ease",
+    }
 };
-
-export default MainPage;

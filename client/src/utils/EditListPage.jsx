@@ -76,7 +76,7 @@ const EditListPage = () => {
             }
 
             alert("List updated successfully!");
-            navigate("/my-lists", { state: { isGuest: isGuest, user: userEmail } }) 
+            navigate("/my-lists", { state: { isGuest: isGuest, user: userEmail } });
         } catch (err) {
             console.error("Error saving list:", err);
             setError("An error occurred while saving the list. Please try again.");
@@ -84,19 +84,19 @@ const EditListPage = () => {
     };
 
     if (loading) {
-        return <p>Loading...</p>;
+        return <p style={styles.loading}>Loading...</p>;
     }
 
     if (error) {
-        return <p style={{ color: "red" }}>{error}</p>;
+        return <p style={styles.error}>{error}</p>;
     }
 
     return (
-        <div style={{ padding: "20px", textAlign: "center" }}>
+        <div style={styles.container}>
             <NavigationBar />
-            <h2>Edit List</h2>
-            <div>
-                <label>
+            <h2 style={styles.heading}>Edit List</h2>
+            <div style={styles.field}>
+                <label style={styles.label}>
                     List Name:
                     <input
                         type="text"
@@ -104,11 +104,12 @@ const EditListPage = () => {
                         onChange={(e) =>
                             setListDetails((prev) => ({ ...prev, listName: e.target.value }))
                         }
+                        style={styles.input}
                     />
                 </label>
             </div>
-            <div>
-                <label>
+            <div style={styles.field}>
+                <label style={styles.label}>
                     Description:
                     <input
                         type="text"
@@ -116,25 +117,27 @@ const EditListPage = () => {
                         onChange={(e) =>
                             setListDetails((prev) => ({ ...prev, description: e.target.value }))
                         }
+                        style={styles.input}
                     />
                 </label>
             </div>
-            <div>
-                <label>
+            <div style={styles.field}>
+                <label style={styles.label}>
                     Visibility:
                     <select
                         value={listDetails.visibility}
                         onChange={(e) =>
                             setListDetails((prev) => ({ ...prev, visibility: e.target.value }))
                         }
+                        style={styles.select}
                     >
                         <option value="private">Private</option>
                         <option value="public">Public</option>
                     </select>
                 </label>
             </div>
-            <div>
-                <label>
+            <div style={styles.field}>
+                <label style={styles.label}>
                     Destinations:
                     <input
                         type="text"
@@ -145,20 +148,96 @@ const EditListPage = () => {
                                 destinations: e.target.value.split(",").map((name) => ({ Destination: name.trim() })),
                             }))
                         }
+                        style={styles.input}
                     />
                 </label>
             </div>
-            <button onClick={handleSave} style={{ marginTop: "20px" }}>
-                Save Changes
-            </button>
-            <button
-                onClick={() => navigate("/my-lists", { state: { isGuest: isGuest, user: userEmail } }) }
-                style={{ marginLeft: "10px", marginTop: "20px" }}
-            >
-                Cancel
-            </button>
+            <div style={styles.buttonContainer}>
+                <button onClick={handleSave} style={styles.button}>
+                    Save Changes
+                </button>
+                <button
+                    onClick={() =>
+                        navigate("/my-lists", { state: { isGuest: isGuest, user: userEmail } })
+                    }
+                    style={styles.cancelButton}
+                >
+                    Cancel
+                </button>
+            </div>
         </div>
     );
 };
 
 export default EditListPage;
+
+const styles = {
+    container: {
+        padding: "20px",
+        fontFamily: "Arial, sans-serif",
+        textAlign: "center",
+    },
+    heading: {
+        marginBottom: "20px",
+        color: "#007BFF",
+    },
+    field: {
+        marginBottom: "20px",
+        textAlign: "left",
+    },
+    label: {
+        display: "block",
+        marginBottom: "5px",
+        fontWeight: "bold",
+        fontSize: "1rem",
+        color: "#333",
+    },
+    input: {
+        width: "100%",
+        padding: "10px",
+        fontSize: "1rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        boxSizing: "border-box",
+    },
+    select: {
+        width: "100%",
+        padding: "10px",
+        fontSize: "1rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        boxSizing: "border-box",
+    },
+    buttonContainer: {
+        marginTop: "20px",
+    },
+    button: {
+        padding: "10px 20px",
+        backgroundColor: "#ED2939",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        fontSize: "1rem",
+        cursor: "pointer",
+        marginRight: "10px",
+        transition: "background-color 0.3s ease",
+    },
+    cancelButton: {
+        padding: "10px 20px",
+        backgroundColor: "#ED2939",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        fontSize: "1rem",
+        cursor: "pointer",
+        transition: "background-color 0.3s ease",
+    },
+    error: {
+        color: "red",
+        fontSize: "1rem",
+    },
+    loading: {
+        color: "#007BFF",
+        fontSize: "1rem",
+    },
+};

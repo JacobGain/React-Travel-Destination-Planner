@@ -137,7 +137,7 @@ const PublicListPage = () => {
                     lists.map((list, index) => (
                         <div key={index} style={styles.listContainer}>
                             <h3>{list.listName}</h3>
-                            <button onClick={() => fetchListDetails(list.listName)}>
+                            <button onClick={() => fetchListDetails(list.listName)} style={styles.button}>
                                 {list.expanded ? "Hide Details" : "Show More"}
                             </button>
                             {list.expanded && list.details && (
@@ -148,12 +148,12 @@ const PublicListPage = () => {
                                     <ul style={{ listStyleType: "none", padding: 0 }}>
                                         {list.details.destinations.map((destination, idx) => (
                                             <li key={idx} style={styles.listItem}>
-                                                <strong>{destination.Destination}</strong> - {destination.Country}
+                                                <strong>{destination.Destination}</strong> - {destination.Country} <br></br>
                                                 <button
                                                     onClick={() =>
                                                         fetchDestinationDetails(destination.id, list.listName)
                                                     }
-                                                    style={{ marginLeft: "10px" }}
+                                                    style={styles.button}
                                                 >
                                                     {destination.expanded ? "Hide Info" : "Show Info"}
                                                 </button>
@@ -232,15 +232,15 @@ const PublicListPage = () => {
                                                 <h5>Add a Review</h5>
                                                 <label>
                                                     Rating (1-10):
-                                                    <input type="number" name="rating" min="1" max="10" required />
+                                                    <input type="number" name="rating" min="1" max="10" required style={styles.inputField}/>
                                                 </label>
                                                 <br />
                                                 <label>
                                                     Comment:
-                                                    <input type="text" name="comment" placeholder="Leave a comment (optional)" />
+                                                    <input type="text" name="comment" placeholder="Leave a comment (optional)" style={styles.inputField}/>
                                                 </label>
                                                 <br />
-                                                <button type="submit">Submit Review</button>
+                                                <button type="submit" style={styles.button}>Submit Review</button>
                                             </form>
                                         )}
 
@@ -265,22 +265,62 @@ export default PublicListPage;
 
 const styles = {
     listContainer: {
-        margin: "10px 0",
+        border: "1px solid #ddd",
+        borderRadius: "8px",
         padding: "15px",
-        border: "1px solid #ccc",
-        borderRadius: "5px",
+        margin: "15px 0",
         backgroundColor: "#f9f9f9",
+        textAlign: "left",
+        boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+        transition: "transform 0.2s ease, box-shadow 0.2s ease",
     },
     listItem: {
         margin: "5px 0",
-        padding: "5px",
+        padding: "10px",
         borderBottom: "1px solid #ddd",
+        fontSize: "1rem",
+        lineHeight: "1.5",
     },
     destinationDetails: {
         marginTop: "10px",
-        padding: "10px",
-        backgroundColor: "#f1f1f1",
-        borderRadius: "5px",
+        padding: "15px",
+        backgroundColor: "#e9ecef",
+        borderRadius: "8px",
         border: "1px solid #ccc",
+        fontSize: "0.95rem",
+        lineHeight: "1.6",
+    },
+    button: {
+        padding: "10px 20px",
+        margin: "10px 0",
+        backgroundColor: "#ED2939",
+        color: "#fff",
+        border: "none",
+        borderRadius: "4px",
+        fontSize: "0.95rem",
+        cursor: "pointer",
+        transition: "background-color 0.3s ease",
+    },
+    buttonHover: {
+        backgroundColor: "#7C0A02", // Slightly darker for hover
+    },
+    inputField: {
+        padding: "10px 20px",
+        margin: "10px 0",
+        fontSize: "0.95rem",
+        border: "1px solid #ccc",
+        borderRadius: "4px",
+        boxSizing: "border-box",
+        width: "100%",
+        transition: "border-color 0.3s ease",
+    },
+    review: {
+        border: "1px solid #ddd",
+        borderRadius: "8px",
+        padding: "10px",
+        margin: "10px 0",
+        backgroundColor: "#f9f9f9",
+        fontSize: "0.95rem",
+        lineHeight: "1.5",
     },
 };
