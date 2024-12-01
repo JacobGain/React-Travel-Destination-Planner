@@ -43,6 +43,9 @@ const CreateEmailAccount = () => {
       setLoading(false);
       setError("");
 
+      if (user.email === "jacob.gain04@gmail.com")
+          user.displayName = "admin";
+
       alert("Account created! Please check your email to verify your account.");
       navigate("/", { state: { isGuest: false, user: user.email } });
     } catch (err) {

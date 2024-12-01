@@ -179,7 +179,6 @@ const styles = {
     },
     heading: {
         marginBottom: "20px",
-        color: "#007BFF",
     },
     field: {
         marginBottom: "20px",
@@ -190,7 +189,7 @@ const styles = {
         marginBottom: "5px",
         fontWeight: "bold",
         fontSize: "1rem",
-        color: "#333",
+        color: "#ED2939",
     },
     input: {
         width: "100%",
