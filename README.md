@@ -163,8 +163,4 @@ europe-destination-planner/
 
 - Security, privacy, acceptable use, and DMCA policies are available under the `/legal` route.
 
-## License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
 ---
