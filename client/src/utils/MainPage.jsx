@@ -1,6 +1,7 @@
 import React, { useState, useRef } from "react";
 import { NavigationBar } from "./NavigationBar";
 import { searchDestinations, changePage } from "./UnauthorizedFunctionality";
+import { createList, deleteList, addDestinationsToList } from "./AuthorizedFunctionality";
 import { useLocation } from "react-router-dom";
 
 const MainPage = () => {
@@ -57,16 +58,37 @@ const MainPage = () => {
     };
 
     // Handle list functionality (create, delete, add destinations)
-    const handleCreateList = () => {
-        console.log("Creating list:", { listName, listDescription, visibility });
+    const handleCreateList = async () => {
+        try {
+            const resultsContainer = resultsContainerRef.current;
+            await createList(listName, listDescription, visibility, resultsContainer);
+            alert("List created successfully!");
+        } catch (err) {
+            console.error("Error creating list:", err);
+            setError("An error occurred while creating the list. Please try again.");
+        }
     };
 
-    const handleDeleteList = () => {
-        console.log("Deleting list:", listName);
+    const handleDeleteList = async () => {
+        try {
+            const resultsContainer = resultsContainerRef.current;
+            await deleteList(listName, resultsContainer);
+            alert("List deleted successfully!");
+        } catch (err) {
+            console.error("Error deleting list:", err);
+            setError("An error occurred while deleting the list. Please try again.");
+        }
     };
 
-    const handleAddDestinations = () => {
-        console.log("Adding destinations:", destinationNames);
+    const handleAddDestinations = async () => {
+        try {
+            const resultsContainer = resultsContainerRef.current;
+            await addDestinationsToList(destinationNames, listName, resultsContainer);
+            alert("Destinations added to the list successfully!");
+        } catch (err) {
+            console.error("Error adding destinations:", err);
+            setError("An error occurred while adding destinations. Please try again.");
+        }
     };
 
 
